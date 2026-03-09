@@ -10,31 +10,38 @@ const push = async (title, desp, options = {}) => {
   const promises = [];
 
   if (process.env.DINGTALK_TOKEN) {
-    promises.push(dingtalk.sendNotify(title, desp).catch(err => console.error("钉钉推送失败:", err.message)));
+    const content = options.dingtalkContent || desp;
+    promises.push(dingtalk.sendNotify(title, content).catch(err => console.error("钉钉推送失败:", err.message)));
   }
 
   if (process.env.SCT_SEND_KEY || process.env.SEND_KEY || process.env.SCTKEY) {
-    promises.push(serverChan.send(title, desp));
+    const content = options.serverChanContent || desp;
+    promises.push(serverChan.send(title, content));
   }
 
   if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID) {
-    promises.push(telegramBot.send(title, desp));
+    const content = options.telegramContent || desp;
+    promises.push(telegramBot.send(title, content));
   }
 
   if (process.env.WECOM_BOT_KEY && process.env.WECOM_BOT_TELPHONE) {
-    promises.push(wecomBot.send(title, desp));
+    const content = options.wecomContent || desp;
+    promises.push(wecomBot.send(title, content));
   }
 
   if (process.env.WX_PUSHER_APP_TOKEN && process.env.WX_PUSHER_UID) {
-    promises.push(wxpush.send(title, desp));
+    const content = options.wxPusherContent || desp;
+    promises.push(wxpush.send(title, content));
   }
 
   if (process.env.PUSH_PLUS_TOKEN) {
-    promises.push(pushPlus.send(title, desp));
+    const content = options.pushPlusContent || desp;
+    promises.push(pushPlus.send(title, content));
   }
 
   if (process.env.BARK_KEY || process.env.barkKey) {
-    promises.push(bark.send(title, desp, options));
+    const content = options.barkContent || desp;
+    promises.push(bark.send(title, content, options));
   }
 
   if (promises.length === 0) {

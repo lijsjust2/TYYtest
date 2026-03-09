@@ -179,9 +179,28 @@ const main = async () => {
     logger.error(`❌ 任务执行异常：${e.message}`);
   } finally {
     const totalAdd = taskResult.totalPersonalSpace + taskResult.totalFamilySpace;
+    
+    const barkGroup = process.env.BARK_GROUP || process.env.barkgroup || "天翼云盘";
+    const barkOptions = {
+      group: barkGroup,
+      icon: "https://cloud.dlife.cn/web/main/logo.ico",
+      sound: "default",
+      level: "active",
+      badge: 1
+    };
+    
     const pushTitle = `天翼云盘签到获得${totalAdd}M`;
     
-    let pushContent = `
+    const summaryContent = `
+📢 天翼云盘签到任务完成
+${"=".repeat(30)}
+✅ 总计增量：
+  个人容量 + ${String(taskResult.totalPersonalSpace).padStart(6)}M 
+  家庭容量 + ${String(taskResult.totalFamilySpace).padStart(6)}M
+  总获得    + ${String(totalAdd).padStart(6)}M
+`;
+
+    const fullContent = `
 📢 天翼云盘签到任务完成
 ${"=".repeat(30)}
 ✅ 总计增量：
@@ -194,23 +213,19 @@ ${"-".repeat(30)}
 `;
 
     taskResult.accountDetails.forEach((account, index) => {
-      pushContent += `
+      fullContent += `
 ${index + 1}. 账户 ${account.userName}
   📈 本次增量：个人 ${account.personalAdd.padStart(6)}M | 家庭 ${account.familyAdd.padStart(6)}M
   📊 总容量：   个人 ${account.personalTotal.padStart(8)}G | 家庭 ${account.familyTotal.padStart(8)}G
 `;
     });
 
-    const barkGroup = process.env.BARK_GROUP || process.env.barkgroup || "天翼云盘";
-    const barkOptions = {
-      group: barkGroup,
-      icon: "https://cloud.dlife.cn/web/main/logo.ico",
-      sound: "default",
-      level: "active",
-      badge: 1
-    };
+    await push(pushTitle, fullContent, {
+      ...barkOptions,
+      barkContent: summaryContent,
+      pushPlusContent: fullContent
+    });
     
-    await push(pushTitle, pushContent, barkOptions);
     recording.erase();
     cleanLogs();
   }
