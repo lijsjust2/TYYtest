@@ -200,7 +200,7 @@ ${"=".repeat(30)}
   总获得    + ${String(totalAdd).padStart(6)}M
 `;
 
-    const fullContent = `
+    let fullContent = `
 📢 天翼云盘签到任务完成
 ${"=".repeat(30)}
 ✅ 总计增量：
