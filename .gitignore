@@ -1,0 +1,14 @@
+**/node_modules
+
+package-lock.json
+
+.env
+.token
+.logs
+
+tyys_cookies.json
+*txt
+*json
+out
+*zip
+.DS_Store
