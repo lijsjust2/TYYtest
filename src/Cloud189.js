@@ -4,10 +4,15 @@ const { CloudClient, FileTokenStore, logger: sdkLogger } = require("cloud189-sdk
 const { push } = require("./push/index");
 const { logger, cleanLogs, catLogs } = require("./logger");
 const { mask, delay, getIpAddr } = require("./utils");
+const pLimit = require("p-limit");
 
 const startTime = Date.now();
 const tokenDir = ".token";
 const timeout = 10000;
+
+const concurrentLimit = parseInt(process.env.CONCURRENT_LIMIT || "3");
+const signTimes = parseInt(process.env.SIGN_TIMES || "3");
+const signDelay = parseInt(process.env.SIGN_DELAY || "500");
 
 sdkLogger.configure({
   isDebugEnabled: process.env.CLOUD189_VERBOSE === "1",
@@ -21,20 +26,29 @@ const doUserTask = async (cloudClient, logger) => {
   const result = [];
   const personalBonus = [];
 
-  try {
-    const res1 = await Promise.race([
-      cloudClient.userSign(),
-      sleep(timeout).then(() => ({ timedOut: true }))
-    ]);
-    if (!res1 || res1.timedOut) throw new Error("个人签到超时");
-    if (!res1.isSign && res1.netdiskBonus) {
-      personalBonus.push(res1.netdiskBonus);
-      logger.info(`个人签到任务: 获得 ${res1.netdiskBonus}M 空间`);
-    } else if (res1.isSign) {
-      logger.info("个人签到任务: 今日已签到");
+  for (let i = 0; i < signTimes; i++) {
+    try {
+      const res = await Promise.race([
+        cloudClient.userSign(),
+        sleep(timeout).then(() => ({ timedOut: true }))
+      ]);
+      
+      if (!res || res.timedOut) throw new Error(`第${i + 1}次签到超时`);
+      
+      if (!res.isSign && res.netdiskBonus) {
+        personalBonus.push(res.netdiskBonus);
+        logger.info(`第${i + 1}次签到: 获得 ${res.netdiskBonus}M 空间`);
+      } else if (res.isSign) {
+        logger.info(`第${i + 1}次签到: 今日已签到`);
+        break;
+      }
+      
+      if (i < signTimes - 1) {
+        await sleep(signDelay);
+      }
+    } catch (e) {
+      logger.error(`第${i + 1}次签到失败: ${e.message}`);
     }
-  } catch (e) {
-    logger.error(`个人签到失败: ${e.message}`);
   }
 
   if (personalBonus.length === 0) personalBonus.push(0);
@@ -57,7 +71,7 @@ const run = async (userName, password, userSizeInfoMap, logger) => {
         userSizeInfo: beforeUserSizeInfo,
         logger,
       });
-      await Promise.all([doUserTask(cloudClient, logger)]);
+      await doUserTask(cloudClient, logger);
     } catch (e) {
       if (e.response) {
         logger.log(`请求失败: ${e.response.statusCode}, ${e.response.body}`);
@@ -88,6 +102,8 @@ const main = async () => {
   let totalFamilySpace = 0;
   let accountDetails = [];
 
+  const limit = pLimit(concurrentLimit);
+
   for (let i = 0; i < accounts.length; i += 2) {
     const [userName, password] = accounts.slice(i, i + 2);
     const userNameInfo = mask(userName, 3, 7);
@@ -98,7 +114,7 @@ const main = async () => {
     logger.log(`\n${accountIndex}. 账户 ${userNameInfo} 开始签到`);
     logger.log("  ──────────────────");
     
-    await run(userName, password, userSizeInfoMap, accountLogger);
+    await limit(() => run(userName, password, userSizeInfoMap, accountLogger));
   }
 
   for (const [
@@ -155,6 +171,7 @@ const main = async () => {
   logger.log("📋 所有账户签到完成 - 总计统计");
   logger.log("=".repeat(45));
   logger.log(`  ✅ 合计增量：个人 ${String(totalPersonalSpace).padStart(6)}M | 家庭 ${String(totalFamilySpace).padStart(6)}M`);
+  logger.log(`  🔄 并发数：${concurrentLimit} | 每账号签到次数：${signTimes} | 签到间隔：${signDelay}ms`);
   logger.log("=".repeat(45));
 
   return { 
