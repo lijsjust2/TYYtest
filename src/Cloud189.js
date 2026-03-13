@@ -23,36 +23,37 @@ const sleep = async (ms) => {
 };
 
 const doUserTask = async (cloudClient, logger) => {
-  const result = [];
   const personalBonus = [];
+  const limit = pLimit(concurrentLimit);
+
+  const promises = [];
 
   for (let i = 0; i < signTimes; i++) {
-    try {
-      const res = await Promise.race([
-        cloudClient.userSign(),
-        sleep(timeout).then(() => ({ timedOut: true }))
-      ]);
-      
-      if (!res || res.timedOut) throw new Error(`第${i + 1}次签到超时`);
-      
-      if (!res.isSign && res.netdiskBonus) {
-        personalBonus.push(res.netdiskBonus);
-        logger.info(`第${i + 1}次签到: 获得 ${res.netdiskBonus}M 空间`);
-      } else if (res.isSign) {
-        logger.info(`第${i + 1}次签到: 今日已签到`);
-        break;
+    promises.push(limit(async () => {
+      try {
+        const res = await Promise.race([
+          cloudClient.userSign(),
+          sleep(timeout).then(() => ({ timedOut: true }))
+        ]);
+        
+        if (!res || res.timedOut) throw new Error(`第${i + 1}次签到超时`);
+        
+        if (!res.isSign && res.netdiskBonus) {
+          personalBonus.push(res.netdiskBonus);
+          logger.info(`第${i + 1}次签到: 获得 ${res.netdiskBonus}M 空间`);
+        } else if (res.isSign) {
+          logger.info(`第${i + 1}次签到: 今日已签到`);
+        }
+      } catch (e) {
+        logger.error(`第${i + 1}次签到失败: ${e.message}`);
       }
-      
-      if (i < signTimes - 1) {
-        await sleep(signDelay);
-      }
-    } catch (e) {
-      logger.error(`第${i + 1}次签到失败: ${e.message}`);
-    }
+    }));
   }
 
+  await Promise.all(promises);
+
   if (personalBonus.length === 0) personalBonus.push(0);
-  return result;
+  return personalBonus;
 };
 
 const run = async (userName, password, userSizeInfoMap, logger) => {
@@ -102,10 +103,6 @@ const main = async () => {
   let totalFamilySpace = 0;
   let accountDetails = [];
 
-  const limit = pLimit(concurrentLimit);
-
-  const promises = [];
-
   for (let i = 0; i < accounts.length; i += 2) {
     const [userName, password] = accounts.slice(i, i + 2);
     const userNameInfo = mask(userName, 3, 7);
@@ -116,10 +113,8 @@ const main = async () => {
     logger.log(`\n${accountIndex}. 账户 ${userNameInfo} 开始签到`);
     logger.log("  ──────────────────");
     
-    promises.push(limit(() => run(userName, password, userSizeInfoMap, accountLogger)));
+    await run(userName, password, userSizeInfoMap, accountLogger);
   }
-
-  await Promise.all(promises);
 
   for (const [
     userName,
