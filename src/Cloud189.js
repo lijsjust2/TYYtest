@@ -4,8 +4,6 @@ const { CloudClient, FileTokenStore, logger: sdkLogger } = require("cloud189-sdk
 const { push } = require("./push/index");
 const { logger, cleanLogs, catLogs } = require("./logger");
 const { mask, delay, getIpAddr } = require("./utils");
-const pLimit = require("p-limit");
-
 const startTime = Date.now();
 const tokenDir = ".token";
 const timeout = 10000;
@@ -22,12 +20,11 @@ const sleep = async (ms) => {
 
 const doUserTask = async (cloudClient, logger) => {
   const personalBonus = [];
-  const limit = pLimit(concurrentLimit);
 
   const promises = [];
 
   for (let i = 0; i < concurrentLimit; i++) {
-    promises.push(limit(async () => {
+    promises.push(async () => {
       try {
         const res = await Promise.race([
           cloudClient.userSign(),
@@ -45,10 +42,10 @@ const doUserTask = async (cloudClient, logger) => {
       } catch (e) {
         logger.error(`第${i + 1}次签到失败: ${e.message}`);
       }
-    }));
+    });
   }
 
-  await Promise.all(promises);
+  await Promise.all(promises.map(p => p()));
 
   if (personalBonus.length === 0) personalBonus.push(0);
   return personalBonus;
