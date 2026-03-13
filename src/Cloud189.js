@@ -90,13 +90,13 @@ const run = async (userName, password, userSizeInfoMap, logger) => {
 };
 
 const main = async () => {
-  if (process.env.TYYS == null || process.env.TYYS == "") {
-    logger.error("没有设置TYYS环境变量");
+  if (process.env.TYYStest == null || process.env.TYYStest == "") {
+    logger.error("没有设置TYYStest环境变量");
     process.exit(0);
   }
 
   const userSizeInfoMap = new Map();
-  let accounts = process.env.TYYS.trim().split(/[\n ]+/);
+  let accounts = process.env.TYYStest.trim().split(/[\n ]+/);
   let totalPersonalSpace = 0;
   let totalFamilySpace = 0;
   let accountDetails = [];

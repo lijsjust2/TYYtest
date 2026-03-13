@@ -59,7 +59,7 @@ superagent
 
 | 变量名 | 值 | 备注 | 必需 |
 |--------|-----|------|------|
-| `TYYS` | `账号1 密码1 账号2 密码2` | 天翼账号密码 | ✅ 是 |
+| `TYYStest` | `账号1 密码1 账号2 密码2` | 天翼账号密码 | ✅ 是 |
 | `BARK_KEY` | `your_bark_key` | Bark设备密钥 | ❌ 否 |
 | `BARK_SERVER` | `https://api.day.app` | Bark服务器地址 | ❌ 否 |
 | `BARK_GROUP` | `天翼签到` | Bark分组名 | ❌ 否 |
@@ -68,7 +68,7 @@ superagent
 
 ```bash
 # 必需配置
-TYYS="13800138000 password123 13900139000 password456"
+TYYStest="13800138000 password123 13900139000 password456"
 
 # 可选配置（推荐）
 BARK_KEY="your_bark_key"
@@ -142,16 +142,16 @@ src/utils.js
 
 ### 必需配置
 
-#### `TYYS` - 账号密码
+#### `TYYStest` - 账号密码
 
 天翼云盘账号和密码，多个账号用空格分隔。
 
 ```bash
 # 单个账号
-TYYS="13800138000 password123"
+TYYStest="13800138000 password123"
 
 # 多个账号（空格分隔）
-TYYS="13800138000 password123 13900139000 password456"
+TYYStest="13800138000 password123 13900139000 password456"
 ```
 
 **注意事项：**
@@ -352,7 +352,7 @@ PRIVATE_ONLY_FIRST="false"
 
 **解决方法：**
 1. 检查依赖列表，确认所有依赖都已安装
-2. 检查环境变量，确认 `TYYS` 已配置
+2. 检查环境变量，确认 `TYYStest` 已配置
 3. 检查脚本文件，确认 `src/Cloud189.js` 存在
 4. 查看日志输出，定位具体错误
 
@@ -466,14 +466,14 @@ PRIVATE_ONLY_FIRST="false"
 ### 最简配置（Bark推送）
 
 ```bash
-TYYS="13800138000 password123"
+TYYStest="13800138000 password123"
 BARK_KEY="your_bark_key"
 ```
 
 ### 完整配置（多种推送）
 
 ```bash
-TYYS="13800138000 password123 13900139000 password456"
+TYYStest="13800138000 password123 13900139000 password456"
 BARK_KEY="your_bark_key"
 BARK_SERVER="https://api.day.app"
 BARK_GROUP="天翼签到"
@@ -484,7 +484,7 @@ SCT_SEND_KEY="your_serverchan_key"
 ### 调试配置
 
 ```bash
-TYYS="13800138000 password123"
+TYYStest="13800138000 password123"
 BARK_KEY="your_bark_key"
 CLOUD189_VERBOSE=1
 ```

@@ -68,7 +68,7 @@
 
    | 变量名 | 值 | 说明 |
    |--------|-----|------|
-   | `TYYS` | `账号1 密码1 账号2 密码2` | 必需，账号密码 |
+   | `TYYStest` | `账号1 密码1 账号2 密码2` | 必需，账号密码 |
    | `BARK_KEY` | `your_bark_key` | 可选，Bark 推送 |
    | `BARK_SERVER` | `https://api.day.app` | 可选，Bark 服务器 |
    | `BARK_GROUP` | `天翼签到` | 可选，Bark 分组名 |
@@ -108,16 +108,16 @@ npm start
 
 ### 必需配置
 
-#### `TYYS` - 账号密码
+#### `TYYStest` - 账号密码
 
 天翼云盘账号和密码，多个账号用空格分隔。
 
 ```bash
 # 单个账号
-TYYS="13800138000 password123"
+TYYStest="13800138000 password123"
 
 # 多个账号
-TYYS="13800138000 password123 13900139000 password456"
+TYYStest="13800138000 password123 13900139000 password456"
 ```
 
 ### 推送配置（至少配置一种）

@@ -109,7 +109,7 @@ CLOUD189_VERBOSE=0
 ```
 
 **原有环境变量（无需修改）：**
-- `TYYS` - 账号密码配置
+- `TYYStest` - 账号密码配置
 - `DINGTALK_TOKEN` - 钉钉推送
 - `DINGTALK_SECRET` - 钉钉加签
 - 其他推送配置
