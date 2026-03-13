@@ -104,6 +104,8 @@ const main = async () => {
 
   const limit = pLimit(concurrentLimit);
 
+  const promises = [];
+
   for (let i = 0; i < accounts.length; i += 2) {
     const [userName, password] = accounts.slice(i, i + 2);
     const userNameInfo = mask(userName, 3, 7);
@@ -114,8 +116,10 @@ const main = async () => {
     logger.log(`\n${accountIndex}. 账户 ${userNameInfo} 开始签到`);
     logger.log("  ──────────────────");
     
-    await limit(() => run(userName, password, userSizeInfoMap, accountLogger));
+    promises.push(limit(() => run(userName, password, userSizeInfoMap, accountLogger)));
   }
+
+  await Promise.all(promises);
 
   for (const [
     userName,
