@@ -11,7 +11,6 @@ const tokenDir = ".token";
 const timeout = 10000;
 
 const concurrentLimit = parseInt(process.env.CONCURRENT_LIMIT || "3");
-const signTimes = parseInt(process.env.SIGN_TIMES || "3");
 
 sdkLogger.configure({
   isDebugEnabled: process.env.CLOUD189_VERBOSE === "1",
@@ -27,7 +26,7 @@ const doUserTask = async (cloudClient, logger) => {
 
   const promises = [];
 
-  for (let i = 0; i < signTimes; i++) {
+  for (let i = 0; i < concurrentLimit; i++) {
     promises.push(limit(async () => {
       try {
         const res = await Promise.race([
@@ -169,7 +168,7 @@ const main = async () => {
   logger.log("📋 所有账户签到完成 - 总计统计");
   logger.log("=".repeat(45));
   logger.log(`  ✅ 合计增量：个人 ${String(totalPersonalSpace).padStart(6)}M | 家庭 ${String(totalFamilySpace).padStart(6)}M`);
-  logger.log(`  🔄 并发数：${concurrentLimit} | 每账号签到次数：${signTimes}`);
+  logger.log(`  🔄 并发签到次数：${concurrentLimit}`);
   logger.log("=".repeat(45));
 
   return { 
