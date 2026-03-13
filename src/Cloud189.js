@@ -1,8 +1,10 @@
 require("dotenv").config();
+const recording = require("log4js/lib/appenders/recording");
 const { CloudClient, FileTokenStore, logger: sdkLogger } = require("cloud189-sdk");
+const { push } = require("./push/index");
+const { logger, cleanLogs, catLogs } = require("./logger");
+const { mask, delay, getIpAddr } = require("./utils");
 const pLimit = require("p-limit");
-const got = require("got");
-const chalk = require("chalk");
 
 const startTime = Date.now();
 const tokenDir = ".token";
@@ -14,91 +16,8 @@ sdkLogger.configure({
   isDebugEnabled: process.env.CLOUD189_VERBOSE === "1",
 });
 
-// 工具函数
 const sleep = async (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
-const mask = (str, start = 3, end = 7) => {
-  if (!str) return str;
-  if (str.length <= start + end) return str;
-  return str.substring(0, start) + "***" + str.substring(str.length - end);
-};
-
-const delay = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-
-const getIpAddr = async () => {
-  try {
-    const response = await got("https://api.ipify.org", {
-      timeout: { request: 5000 },
-    });
-    const ip = response.body;
-    console.log(chalk.green(`📡 当前IP地址: ${ip}`));
-  } catch (error) {
-    console.log(chalk.yellow("⚠️  获取IP地址失败，使用默认值"));
-  }
-};
-
-// 日志函数
-const logger = {
-  log: (message) => console.log(`[${new Date().toLocaleString()}] ${message}`),
-  info: (message) => console.log(`[${new Date().toLocaleString()}] ${chalk.green(message)}`),
-  error: (message) => console.log(`[${new Date().toLocaleString()}] ${chalk.red(message)}`),
-  addContext: () => {}
-};
-
-const cleanLogs = () => {
-  // 简化版本，不做实际清理
-};
-
-// 推送函数
-const push = async (title, desp, options = {}) => {
-  const promises = [];
-
-  if (process.env.PUSH_PLUS_TOKEN) {
-    const content = options.pushPlusContent || desp;
-    promises.push(
-      got("http://www.pushplus.plus/send", {
-        method: "post",
-        json: {
-          token: process.env.PUSH_PLUS_TOKEN,
-          title,
-          content,
-          template: "markdown",
-        },
-      })
-    );
-  }
-
-  if (process.env.BARK_KEY || process.env.barkKey) {
-    const content = options.barkContent || desp;
-    const barkKey = process.env.BARK_KEY || process.env.barkKey;
-    const barkServer = process.env.BARK_SERVER || process.env.barkServer || "https://api.day.app";
-    const group = options.group || process.env.BARK_GROUP || process.env.barkgroup || "天翼云盘";
-    const icon = options.icon || "https://cloud.dlife.cn/web/main/logo.ico";
-    const sound = options.sound || "default";
-    const level = options.level || "active";
-    const badge = options.badge || 1;
-
-    const url = `${barkServer}/${barkKey}/${encodeURIComponent(title)}/${encodeURIComponent(content)}?group=${encodeURIComponent(group)}&icon=${encodeURIComponent(icon)}&sound=${sound}&level=${level}&badge=${badge}`;
-    promises.push(got(url));
-  }
-
-  if (promises.length === 0) {
-    console.log("未配置任何推送方式");
-  }
-
-  try {
-    await Promise.allSettled(promises);
-  } catch (e) {
-    console.error(`推送失败: ${e.message}`);
-  }
-};
-
-const recording = {
-  erase: () => {}
 };
 
 const doUserTask = async (cloudClient, logger) => {
