@@ -12,7 +12,6 @@ const timeout = 10000;
 
 const concurrentLimit = parseInt(process.env.CONCURRENT_LIMIT || "3");
 const signTimes = parseInt(process.env.SIGN_TIMES || "3");
-const signDelay = parseInt(process.env.SIGN_DELAY || "500");
 
 sdkLogger.configure({
   isDebugEnabled: process.env.CLOUD189_VERBOSE === "1",
@@ -170,7 +169,7 @@ const main = async () => {
   logger.log("📋 所有账户签到完成 - 总计统计");
   logger.log("=".repeat(45));
   logger.log(`  ✅ 合计增量：个人 ${String(totalPersonalSpace).padStart(6)}M | 家庭 ${String(totalFamilySpace).padStart(6)}M`);
-  logger.log(`  🔄 并发数：${concurrentLimit} | 每账号签到次数：${signTimes} | 签到间隔：${signDelay}ms`);
+  logger.log(`  🔄 并发数：${concurrentLimit} | 每账号签到次数：${signTimes}`);
   logger.log("=".repeat(45));
 
   return { 
